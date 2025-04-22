@@ -19,7 +19,10 @@ class point (object):
         return point(self.attributes - other.attributes)
     def dot_product(self, other):
         return sum(self.attributes * other.attributes)
-    #todo: implement scaling, implement length function, test code
+    def scale(self, scalar):
+        self.attributes = self.attributes * scalar
+    def length(self):
+        return sum(self.attributes**2)**0.5
     
     def get_attributes(self):
         return self.attributes
