@@ -22,7 +22,7 @@ class point (object):
         return point(self.attributes + other.attributes)
     def minus(self, other):
         return point(self.attributes - other.attributes)
-    def dot_product(self, other):
+    def dot(self, other):
         return sum(self.attributes * other.attributes)
     def scale(self, scalar):
         self.attributes = self.attributes * scalar
