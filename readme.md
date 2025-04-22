@@ -1,3 +1,2 @@
-This is a set of clustering algorithms.
-these are custom implementations for educational purposses only.
-the code here will be well documemted but it is not meant for production.
+This is a set of well documented clustering algorithms
+for fun and education, not for production
