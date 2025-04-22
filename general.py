@@ -8,14 +8,16 @@ class point (object):
         self.attributes = attribute_array
     def __str__(self):
         return str(self.attributes)
+    def __eq__(self, other):
+        return self.attributes == other.attributes
     
     def manhattan_distance(self, other):
         return sum(abs(self.attributes - other.attributes))
     def euclidian_distance(self, other):
         return sum(((self.attributes - other.attributes)**2))**0.5
-    def vector_sum(self, other):
+    def plus(self, other):
         return point(self.attributes + other.attributes)
-    def vector_difference(self, other):
+    def minus(self, other):
         return point(self.attributes - other.attributes)
     def dot_product(self, other):
         return sum(self.attributes * other.attributes)
