@@ -9,7 +9,10 @@ class point (object):
     def __str__(self):
         return str(self.attributes)
     def __eq__(self, other):
-        return self.attributes == other.attributes
+        for i in range(len(self.attributes)):
+            if self.attributes[i] != other.attributes[i]:
+                return False
+        return True
     
     def manhattan_distance(self, other):
         return sum(abs(self.attributes - other.attributes))
