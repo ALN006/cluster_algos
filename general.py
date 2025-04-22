@@ -11,8 +11,8 @@ class point (object):
     
     def manhattan_distance(self, other):
         return sum(abs(self.attributes - other.attributes))
-    def euclidean_distance(self, other):
-        return sum(((self.attributes - other.attributes)**2)**0.5)
+    def euclidian_distance(self, other):
+        return sum(((self.attributes - other.attributes)**2))**0.5
     def vector_sum(self, other):
         return point(self.attributes + other.attributes)
     def vector_difference(self, other):
