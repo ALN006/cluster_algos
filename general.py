@@ -32,13 +32,13 @@ class point (object):
     def dimensionality(self):
         return len(self.attributes)
     
-    def attributes(self):
+    def get_attributes(self):
         return self.attributes
     def attribute(self, index):
         return self.attributes[index]
     
     def set_attributes(self, attribute_array):
-        self.attributes = attribute_array
+        self.attributes = pylab.array(attribute_array)
     def set_attribute(self, index, value):
         self.attributes[index] = value
 
@@ -63,27 +63,36 @@ class cluster(object):
             centroid = centroid.plus(p)
         centroid.scale(1/len(self.points))
         return centroid
-    def single_linkage(self, other, distance_function):
+    def single_linkage(self, other, distance_function = point.euclidian_distance):
         """returns shortest distance between self and other"""
-        min_distance = self.points[0].distance_function(other.points[0])
+        min_distance = distance_function(self.points[0],other.points[0])
+        ans = self.points[0].minus(other.points[0])
         for p1 in self.points:
             for p2 in other.points:
-                distance = p1.distance_function(p2)
+                distance = distance_function(p1,p2)
                 if distance < min_distance:
                     min_distance = distance
-        return min_distance
-    def complete_linkage(self, other, distance_function):
+                    ans = p1.minus(p2)
+        return ans
+    def complete_linkage(self, other, distance_function = point.euclidian_distance):
         """returns longest distance between self and other"""
-        max_distance = self.points[0].distance_function(other.points[0])
+        max_distance = distance_function(self.points[0],other.points[0])
+        ans = self.points[0].minus(other.points[0])
         for p1 in self.points:
             for p2 in other.points:
-                distance = p1.distance_function(p2)
+                distance = distance_function(p1,p2)
                 if distance > max_distance:
                     max_distance = distance
-        return max_distance
-    def centroid_linkage(self, other, distance_function):
+                    ans = p1.minus(p2)
+        return ans
+    def centroid_linkage(self, other):
         """returns distance between centroids of self and other"""
-        return self.centroid().distance_function(other.centroid())
+        return self.centroid().minus(other.centroid())
+    def scale(self, scalar):
+        """scales all points in self by scalar"""
+        for p in self.points:
+            p.scale(scalar)
+        return self
     
     def add(self, point):
         self.points.append(point)
