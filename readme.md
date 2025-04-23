@@ -1,2 +1,2 @@
-This is a set of well documented clustering algorithms
+This is a set of clustering algorithms made for
 for fun and education, not for production
