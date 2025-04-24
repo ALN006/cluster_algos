@@ -1,3 +1,4 @@
+
 import pylab
 
 class point (object):
@@ -14,9 +15,11 @@ class point (object):
             if self.attributes[i] != other.attributes[i]:
                 return False
         return True
+    def __repr__(self):
+        return str(self.attributes)
     
     def manhattan_distance(self, other):
-        return sum(abs(self.attributes - other.attributes))
+        return sum(abs(self.attributes - other.attributes))#this actually works
     def euclidian_distance(self, other):
         return sum(((self.attributes - other.attributes)**2))**0.5
     def plus(self, other):
@@ -25,8 +28,6 @@ class point (object):
         return point(self.attributes - other.attributes)
     def dot(self, other):
         return sum(self.attributes * other.attributes)
-    def scale(self, scalar):
-        self.attributes = self.attributes * scalar
     def length(self):
         return sum(self.attributes**2)**0.5
     def dimensionality(self):
@@ -41,13 +42,18 @@ class point (object):
         self.attributes = pylab.array(attribute_array)
     def set_attribute(self, index, value):
         self.attributes[index] = value
+    def scale(self, scalar):
+        return point(self.attributes * scalar)
 
 class cluster(object):
     """assumes self is a cluster of points, models self as a list of point objects"""
-    def __init__(self, points):
+    def __init__(self, points = []):
         self.points = points
     def __str__(self):
-        return str(self.points)
+        s = ""
+        for p in self.points:
+            s += str(p)
+        return s
     def __eq__(self, other):
         if len(self.points) != len(other.points):
             return False
@@ -55,53 +61,45 @@ class cluster(object):
             if self.points[i] != other.points[i]:
                 return False
         return True
+    def __repr__(self):
+        return str(self)
     
     def centroid(self):
         """returns the centroid of self as a point object"""
         centroid = point([0]*self.points[0].dimensionality())
         for p in self.points:
             centroid = centroid.plus(p)
-        centroid.scale(1/len(self.points))
+        centroid = centroid.scale(1/len(self.points))
         return centroid
-    def single_linkage(self, other, distance_function = point.euclidian_distance):
-        """returns shortest distance between self and other"""
-        min_distance = distance_function(self.points[0],other.points[0])
+    def intensive_linkage(self, other,link = "single", distance_function = point.euclidian_distance):
+        """returns linkage vector between self and other"""
+        link_f = {"single": (lambda x,y: x < y), "complete": (lambda x,y: x > y)}
+        d = distance_function(self.points[0],other.points[0])
         ans = self.points[0].minus(other.points[0])
         for p1 in self.points:
             for p2 in other.points:
                 distance = distance_function(p1,p2)
-                if distance < min_distance:
-                    min_distance = distance
-                    ans = p1.minus(p2)
-        return ans
-    def complete_linkage(self, other, distance_function = point.euclidian_distance):
-        """returns longest distance between self and other"""
-        max_distance = distance_function(self.points[0],other.points[0])
-        ans = self.points[0].minus(other.points[0])
-        for p1 in self.points:
-            for p2 in other.points:
-                distance = distance_function(p1,p2)
-                if distance > max_distance:
-                    max_distance = distance
+                if link_f[link](distance, d):
+                    d = distance
                     ans = p1.minus(p2)
         return ans
     def centroid_linkage(self, other):
         """returns distance between centroids of self and other"""
         return self.centroid().minus(other.centroid())
     def scale(self, scalar):
-        """scales all points in self by scalar"""
+        L = []
         for p in self.points:
-            p.scale(scalar)
-        return self
+            L += [p.scale(scalar)]
+        return cluster(L)
     
-    def add(self, point):
+    def append(self, point):
         self.points.append(point)
     def remove(self, point):
         self.points.remove(point)
-    def merge(self, other):
+    def add(self, other):
         self.points.extend(other.points)
     def clear(self):
         self.points = []
     
-    def points(self):
+    def get_points(self):
         return self.points
