@@ -1,6 +1,5 @@
 import pandas as pd
-df = pd.read_csv('data.csv') #a table
-pd.set_option('display.max_columns', 20) #show 20 columns
-pd.set_option('display.max_rows', 20) #show 20 rows
-print(df.info()) 
-print(df.head()) #first 5 rows
+data = pd.read_csv("../data.csv")
+df = pd.DataFrame([[1,2,3],[4,5,6],[7,8,9],[10,11,12]],\
+columns=['A','B','C'])
+print(df.loc[ :])

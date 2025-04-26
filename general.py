@@ -1,68 +1,73 @@
 import pylab
+import numpy as np
 import pandas as pd
 import random
 class point (object):
     """assumes self is a n-dimensional position vector for a point, models self as a array of attributes"""
 
-    def __init__(self, attribute_list = []):
-        self.attributes = pylab.array(attribute_list)
+    def __init__(self, attributes = []):
+        self.series = pd.Series(attributes)
     def __str__(self):
-        return str(self.attributes)
-    def __eq__(self, other):
-        if len(self.attributes) != len(other.attributes):
-            return False
-        for i in range(len(self.attributes)):
-            if abs(self.attributes[i] - other.attributes[i]) > 0.0001:
-                return False
-        return True
+        return str(list(self.series))
     def __repr__(self):
-        return str(self.attributes)
-    def __add__(self, other):
-        return point(self.attributes + other.attributes)
-    def __sub__(self, other):
-        return point.__add__(self, other.scaled(-1))
-    def __mul__(self, other):
-        return sum(self.attributes * other.attributes)
-    def __len__(self):
-        return len(self.attributes)
+        return str(list(self.series))
+    def __eq__(self, other):
+        return (self.series == other.series).all()
     
-    def manhattan_distance(self, other):
-        return sum(abs(self.attributes - other.attributes))#this actually works
-    def euclidean_distance(self, other):
-        return sum(((self.attributes - other.attributes)**2))**0.5
+    def __add__(self, other):
+        if isinstance(other, point):
+            return point(self.series + other.series)
+        else:
+            return point(self.series + other)
+    def __sub__(self, other):
+        return self + other * -1
+    def __mul__(self, other):
+        if isinstance(other, point):
+            return point(self.series * other.series)
+        else:
+            return point(self.series * other)
+    def __pow__(self, other):
+        if isinstance(other, point):
+            return point(self.series ** other.series)
+        else:
+            return point(self.series ** other)
+    
+    def __len__(self):
+        return len(self.series)
+    def __getitem__(self, index):
+        return self.series[index]
+    def __setitem__(self, index, value):
+        self.series[index] = value
+    def __iter__(self): 
+        return iter(self.series)
+    def __contains__(self, item): 
+        return item in self.series.values
+    
     def length(self):
-        return point.euclidean_distance(self, point([0]*len(self.attributes)))
+        return self.euclidean_distance(point([0]*len(self.series)))
+    def manhattan_distance(self, other):
+        return sum(abs(self.series - other.series))
+    def euclidean_distance(self, other):
+        return sum((self.series - other.series)**2)**0.5
+    def dot(self, other):
+        return sum(self.series * other.series)
     
     def get_attributes(self):
-        return self.attributes
-    def attribute(self, index):
-        return self.attributes[index]
-    
-    def set_attributes(self, attribute_array):
-        self.attributes = pylab.array(attribute_array)
-    def set_attribute(self, index, value):
-        self.attributes[index] = value
-    def scaled(self, scalar):
-        return point(self.attributes * scalar)
+        return list(self.series)
+    def set_attributes(self, attributes):
+        self.series = pd.Series(attributes)
 
-class cluster(object):
+class cluster(object): 
     """assumes self is a cluster of points, models self as a list of point objects"""
     def __init__(self, points = []):
         self.points = points
+        self.df = pd.DataFrame([p.get_attributes() for p in points])
     def __str__(self):
-        s = ""
-        for p in self.points:
-            s += str(p)
-        return s
+        return str(self.df)
     def __eq__(self, other):
-        if len(self.points) != len(other.points):
-            return False
-        for i in range(len(self.points)):
-            if self.points[i] != other.points[i]:
-                return False
-        return True
+        return (self.df == other.df).all().all()
     def __repr__(self):
-        return str(self)
+        return str(self.df)
     def __add__(self, other):
         return cluster(self.points + other.points)
     def __sub__(self, other):
@@ -71,30 +76,26 @@ class cluster(object):
     
     def centroid(self):
         """returns the centroid of self as a point object"""
-        centroid = point([0]*len(self.points[0]))
-        for p in self.points:
-            centroid = centroid + p
-        centroid = centroid.scaled(1/len(self.points))
-        return centroid
+        return point([sum(self.df[i])/len(self.df) for i in range(len(self.df))])
     def intensive_linkage(self, other,link = "single", distance_function = point.euclidean_distance):
         """returns linkage vector between self and other"""
         link_f = {"single": (lambda x,y: x < y), "complete": (lambda x,y: x > y)}
-        d = distance_function(self.points[0],other.points[0])
-        ans = self.points[0] - other.points[0]
-        for p1 in self.points:
-            for p2 in other.points:
-                distance = distance_function(p1,p2)
+        d = distance_function(self.df.loc[0],other.df.loc[0])
+        ans = self.df.loc[0] - other.df.loc[0]
+        for i in range(len(self.df)):
+            for j in range(len(other.df)):
+                distance = distance_function(self.df.loc[i],other.df.loc[j])
                 if link_f[link](distance, d):
                     d = distance
-                    ans = p1 - p2
-        return ans
+                    ans = self.df.loc[i] - other.df.loc[j]
+        return point(ans)
     def centroid_linkage(self, other):
-        return self.centroid() - (other.centroid())
+        return (self.centroid() - other.centroid())
     def scaled(self, scalar):
-        return cluster([p.scaled(scalar) for p in self.points])
+        return cluster([self.df.loc[i]*scalar for i in range(len(self))])#this should work
     
-    def get_points(self):
-        return self.points
+    def get_df(self):
+        return self.df
     
     def append(self, point):
         self.points.append(point)
@@ -123,24 +124,8 @@ class test_point(object):
         self.dimensions = dimensions
         self.trials = trials
 
-    def get(self):
-        for i in range(self.trials):
-            L = [random.random() for j in range(self.dimensions)]
-            p = point()
-            p.set_attributes(L)
-            if L != list(p.get_attributes()):
-                print(f" get_attributes failed\n p = {p}\n p.get_attributes() = {p.get_attributes()}")
-                return False
-        return True
-    def string(self):
-        for i in range(self.trials):
-            L = [random.random() for j in range(self.dimensions)]
-            p = point(L)
-            if not(str(p) == str(pylab.array(L)) == repr(p)):
-                print(f"string failed\n p = {p}\n str(p) = {str(p)}\n repr(p) = {repr(p)}")
-                return False
-        return True
     def add(self):
+        '''tests __add__,__sub__,__init__,__eq__,__repr,__str__'''
         for i in range(self.trials):
             L1 = [random.random() for j in range(self.dimensions)]
             L2 = [random.random() for j in range(self.dimensions)]
@@ -156,7 +141,7 @@ class test_point(object):
             L2 = [random.random() for j in range(self.dimensions)]
             p1 = point(L1)
             p2 = point(L2)
-            if (p1 * p2) != sum(pylab.array(L1) * pylab.array(L2)):
+            if (p1 * p2) != point(pylab.array(L1) * pylab.array(L2)):
                 print(f"mul failed\n p1 = {p1}\n p2 = {p2}\n p1 * p2 = {p1 * p2}")
                 return False
         return True
@@ -184,36 +169,36 @@ class test_point(object):
             L2 = [random.random() for j in range(self.dimensions)]
             p1 = point(L1)
             p2 = point(L2)
-            if p1.euclidean_distance(p2) != sum((pylab.array(L1) - pylab.array(L2))**2)**0.5:
+            if p1.euclidean_distance(p2) != sum((p1 - p2)**2)**0.5:
                 print(f"euclidean_distance failed\n p1 = {p1}\n p2 = {p2}\n p1.euclidean_distance(p2) = {p1.euclidean_distance(p2)}")
                 return False
         return True
-    def eq(self):
+    def assignment(self):
+        for i in range(self.trials):
+            L = [random.random() for j in range(self.dimensions)]
+            p = point()
+            p.set_attributes(L)
+            x = p[0]
+            p[0] = x + 1
+            L[0] = x + 1
+            if p[0] == x or p[0] != x + 1 or p.get_attributes() != L:
+                print(f"item_assignment failed\n p = {p}\n intial val of p[0] -> x = {x}\n final value is not incremented by 1 -> p[0] = {p[0]}")
+                return False
+        return True
+    def iteration(self): 
         for i in range(self.trials):
             L = [random.random() for j in range(self.dimensions)]
             p = point(L)
-            p2 = point([L[0]+0.01]+L[1:])
-            if p == p2 or p != p:
-                print(f"eq failed\n p = {p}\n p2 = {p2}\n p == p2 = {p == p2}\n p != p = {p != p}")
-                return False
+            for k in p:
+                if k not in p:
+                    print(f"iteration failed\n p = {p}\n k = {k}\n k not in p = {k not in p}")
+                    return False
         return True
-    def scaled(self):
-        for i in range(self.trials):
-            L1 = [random.random() for j in range(self.dimensions)]
-            L2 = [random.random() for j in range(self.dimensions)]
-            p1 = point(L1)
-            p2 = point(L2)
-            if p1.scaled(p2.get_attributes()) != point(pylab.array(L1) * pylab.array(L2)):
-                print(f"scaled failed\n p1 = {p1}\n p2 = {p2}\n p1.scaled(p2.get_attributes()) = {p1.scaled(p2.get_attributes())}")
-                return False
-        return True
+ 
     def TestAll(self):
         result = True
-        tests = [self.get, self.string, self.add, self.mul, self.len, self.manhattan_distance,\
-                 self.euclidean_distance, self.eq, self.scaled]
+        tests = [self.add, self.mul, self.len, self.manhattan_distance, self.euclidean_distance, self.assignment, self.iteration]
         for t in tests:
             if not t():
                 result = False
         return result
-
-        
