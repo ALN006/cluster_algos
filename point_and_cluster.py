@@ -17,7 +17,7 @@ class point (object):
     def __len__(self):
         return len(self.attributes)
     def __hash__(self):
-        return hash(tuple(self.attributes))
+        return hash(tuple(np.round(self.attributes, decimals=3)))
     
     #amazingly this works cause np.array(point) works and np.array(a number) = that number
     def __add__(self, other):
@@ -50,6 +50,7 @@ class point (object):
         return list(self.attributes) <= list(other.attributes)
     def __abs__(self):
         return point(abs(self.attributes))
+    
     def length(self):
         return self.euclidean_distance(point([0]*len(self.attributes)))
     def manhattan_distance(self, other):
@@ -114,12 +115,12 @@ class test_point(unittest.TestCase):
         for i in range(1,len(self.points)):
             d1 = point(self.points[i-1]).euclidean_distance(point(self.points[i]))
             d2 = (sum((np.array(self.points[i-1]) - np.array(self.points[i]))**2))**0.5
-            self. assertEqual(d1,d2)
+            self. assertAlmostEqual(d1,d2)
     def test_manhattan_dist(self):
         for i in range(1,len(self.points)):
             d1 = point(self.points[i-1]).manhattan_distance(point(self.points[i]))
             d2 = sum(abs(np.array(self.points[i-1]) - np.array(self.points[i])))
-            self. assertEqual(d1,d2)
+            self. assertAlmostEqual(d1,d2)
     def test_dot(self):
         for i in range(1,len(self.points)):
             a = point(self.points[i-1]).dot(point(self.points[i]))
@@ -140,15 +141,15 @@ class test_point(unittest.TestCase):
             self.assertEqual(point(i).get_attributes(), i)
 
 class cluster(object):
-    '''assumes self is a cluster of unique points, models self as a sorted list of point objects'''
+    '''assumes self is a cluster of points, models self as a list of point objects'''
 
     def __init__(self,data:list[point]):
         if isinstance(data, pd.DataFrame):
-            self.points = sorted(list(set(point(x) for x in data.values.tolist())))
+            self.points = list(point(x) for x in data.values.tolist())
         else: 
-            self.points = sorted(list(set(data)))
+            self.points = data
     def __eq__(self,other):
-        return self.points == other.points #some floating point tolerance is built into point equality so this is not a problem
+        return sorted(self.points) == sorted(other.points) 
     def __repr__(self):
         return str(self.points)
     def __len__(self):
@@ -199,11 +200,11 @@ class cluster(object):
         return a/len(self.points)
     def centroid_linkage(self,other, f = point.euclidean_distance):
         return f(self.centroid(), other.centroid())
-    def single_linkage(self,other):
-        return min([min(i) for i in cluster.distance_matrix(self,other)])
-    def complete_linkage(self,other):
-        return max([max(i) for i in cluster.distance_matrix(self,other)])
-    def normalize(self):
+    def single_linkage(self,other, f = point.euclidean_distance):
+        return min([min(i) for i in cluster.distance_matrix(self,other, f)])
+    def complete_linkage(self,other, f = point.euclidean_distance):
+        return max([max(i) for i in cluster.distance_matrix(self,other, f)])
+    def normalized(self):
         min = self.points[0].copy()
         max = self.points[0].copy()
         for i in self.points:
@@ -212,12 +213,22 @@ class cluster(object):
                     min[j] = i[j]
                 if i[j] > max[j]:
                     max[j] = i[j]
-        return cluster([(p - min)/(max-min) for p in self.points])
+
+        if min == max: 
+            return cluster([point([1]*len(min)) for _ in self.points])
+        else:
+            return cluster([(p - min)/(max-min) for p in self.points])
+    def merged(self, other):
+        return cluster(self.points + other.points)
+    def copy(self):
+        return cluster([p.copy() for p in self.points])
     
     def get_points(self):
         return self.points
     def set_points(self, points):
         self.points = points
+    def append(self,point):
+        self.points += [point]
     
 class test_cluster(unittest.TestCase):
     '''self is a sorted list of random points used to test class cluster'''
@@ -231,7 +242,7 @@ class test_cluster(unittest.TestCase):
             self.assertNotEqual(cluster(self.clusters[i+1:i+11]),cluster(self.clusters[i:i+10]))
     def test_string(self):
         for i in range(0,len(self.clusters),10):
-            L = sorted(self.clusters[i:i+10])
+            L = self.clusters[i:i+10]
             self.assertEqual(str(cluster(L)),str(L))
     def test_len(self):
         for i in range(0,len(self.clusters),10):
@@ -246,7 +257,7 @@ class test_cluster(unittest.TestCase):
             c = op(cluster(self.clusters[i:i+10]), cluster(self.clusters[i+1:i+11]))
             r = random.random()
             self.assertTrue(isinstance(c, cluster))
-            self.assertEqual(c,cluster([op(a,b) for a,b in zip(sorted(self.clusters[i:i+10]),sorted(self.clusters[i+1:i+11]))]))
+            self.assertEqual(c,cluster([op(a,b) for a,b in zip(self.clusters[i:i+10],self.clusters[i+1:i+11])]))
             self.assertTrue(isinstance(op(c,r), cluster))
             self.assertEqual(op(c,r), op(c,r) + 0.000001)
     def test_add(self):
@@ -262,7 +273,7 @@ class test_cluster(unittest.TestCase):
     
     def test_get_item(self):
         for i in range(0,len(self.clusters),10):
-            self.assertEqual(cluster(self.clusters[i:i+10])[0],sorted(self.clusters[i:i+10])[0])
+            self.assertEqual(cluster(self.clusters[i:i+10])[0],self.clusters[i:i+10][0])
     def test_set_item(self):
         for i in range(0,len(self.clusters),10):
             c = cluster(self.clusters[i:i+10])
@@ -293,7 +304,7 @@ class test_cluster(unittest.TestCase):
             matrix = cluster.distance_matrix(cluster(self.clusters[i:i+10]), cluster(self.clusters[i+5:i+15]))
             for j in range(len(matrix)):
                 for k in range(len(matrix[0])):
-                    self.assertEqual(matrix[j][k], sorted(self.clusters[i:i+10])[j].euclidean_distance(sorted(self.clusters[i+5:i+15])[k]))
+                    self.assertEqual(matrix[j][k], self.clusters[i:i+10][j].euclidean_distance(self.clusters[i+5:i+15][k]))
     def test_single_linkage(self):
         for i in range(0,len(self.clusters),10):
             d = min([min(i) for i in cluster.distance_matrix(cluster(self.clusters[i:i+10]), cluster(self.clusters[0:10]))])
@@ -304,8 +315,29 @@ class test_cluster(unittest.TestCase):
             self.assertEqual(d, cluster.complete_linkage(cluster(self.clusters[i:i+10]), cluster(self.clusters[0:10])))
     def test_normalize(self):
         for i in range(0,len(self.clusters),10):
-            for i in cluster(self.clusters[i:i+10]).normalize():
+            for i in cluster(self.clusters[i:i+10]).normalized():
                 self.assertTrue(point([0]*3) <= i <= point([1]*3))
+
+class cluster_set(object):
+    ''' models self as a set of clusters'''
+
+    def __init__(self, data:list[cluster]):
+        self.clusters = data
+    def __getitem__(self, index):
+        return self.clusters[index]
+    def __setitem__(self, index, item):
+        self.clusters[index] = item
+    def __repr__(self):
+        return str(self.clusters)
+        
+    def is_close(self, other, min_diff = 0.01, f = point.euclidean_distance):
+        if other == []:
+            return False
+        if len(other.clusters) != len(self.clusters):
+            return True
+        return max([f(a.centroid(),b.centroid()) for a,b in zip(self.clusters, other.clusters)]) < min_diff
+    def copy(self):
+        return cluster_set(self.clusters.copy())
 
 if __name__ == '__main__':
     unittest.main()
