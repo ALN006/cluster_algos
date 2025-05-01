@@ -1,10 +1,11 @@
-#importing modules
+#functional approach
+#this is one of my earlier works, back when i firsst started to code
 import pandas as pd
 #to normalize my data
-##def normalize(column):
-##    min_val = column.min()
-##    max_val = column.max()
-##    return (column - min_val) / (max_val - min_val)
+def normalize(column):
+    min_val = column.min()
+    max_val = column.max()
+    return (column - min_val) / (max_val - min_val)
 #to generate distance matrix
 def DistanceMatrix(k, mean_dictionary = {}):
     md = mean_dictionary
@@ -68,15 +69,13 @@ h = table["Humidity (%)"]
 p = table["Pressure (hPa)"]
 t = table["Temperature (°C)"]
 v = table["Visibility (km)"]
-##dp = normalize(dp)
-##h = normalize(h)
-##p = normalize(p)
-##t = normalize(t)
-##v = normalize(v)
-print("means:",kmeans(2,1))
-dl = DistanceMatrix(2)
-al = assignment(2,dl)
-print("grouping of 04-jan-2015: cluster",al[2]+1)
-print("distance of 12-jan-2016 from 01-jan-2015:",dl[0][323])
-
-
+dp = normalize(dp)
+h = normalize(h)
+p = normalize(p)
+t = normalize(t)
+v = normalize(v) 
+#print("means:",kmeans(2,1))
+#dl = DistanceMatrix(2)
+#al = assignment(2,dl)
+#print("grouping of 04-jan-2015: cluster",al[2]+1)
+#print("distance of 12-jan-2016 from 01-jan-2015:",dl[0][323])
