@@ -28,7 +28,7 @@ def grid_cluster(k, points):
         the main advantage of this program is that it has no bias towards any particular cluster shape unlike a program lik KMeans say which
         heavily biases towards n-dimensioonal spheres.
         
-        works only for cases where 2 clusters are desiered, else its complicated"""
+        should be employed recusrsizely if more tthan 2 clusters are desired"""
     
     x_min = min(p[0] for p in points)
     y_min = min(p[1] for p in points)
