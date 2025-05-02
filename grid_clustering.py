@@ -1,9 +1,4 @@
 #functional approcah
-import random
-
-x_vals = [random.random()*100 for _ in range(100000)]
-y_vals = [random.random()*100 for _ in range(100000)]
-vals = list(zip(x_vals, y_vals))
 
 def grid_cluster(k, points):
 
@@ -66,4 +61,9 @@ def grid_cluster(k, points):
 
     return decision_boundary
 
-print(len(grid_cluster(10, vals)))
+#example
+import random
+x_vals = [random.random()*100 for _ in range(100000)]
+y_vals = [random.random()*100 for _ in range(100000)]
+vals = list(zip(x_vals, y_vals))
+print(grid_cluster(10, vals))
