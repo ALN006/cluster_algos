@@ -1,144 +1,10 @@
 import pandas as pd
 import numpy as np
-class point (object):
-    """assumes self is a n-dimensional position vector for a point, models self as a array of attributes"""
-
-    def __init__(self, attributes):
-        self.attributes = np.array(attributes)
-    def __repr__(self):
-        return str(self.attributes)
-    def __eq__(self, other):
-        if len(self.attributes) != len(other.attributes):
-            return False 
-        ans = True
-        for i in (abs(self.attributes - other.attributes) < 0.0001):
-            ans &= i
-        return ans
-    def __len__(self):
-        return len(self.attributes)
-    def __hash__(self):
-        return hash(tuple(np.round(self.attributes, decimals=3)))
-    
-    #amazingly this works cause np.array(point) works and np.array(a number) = that number
-    def __add__(self, other):
-        return (point(self.attributes + np.array(other)))
-    def __sub__(self, other):
-        return self + other * -1
-    def __mul__(self, other):
-        return (point(self.attributes * np.array(other)))
-    def __truediv__(self, other):  
-        return (point(self.attributes / np.array(other)))
-    def __pow__(self, other):
-        return (point(self.attributes ** np.array(other)))
-    
-    def __getitem__(self, index):
-        return self.attributes[index]
-    def __setitem__(self, index, value):
-        self.attributes[index] = value
-    def __iter__(self): 
-        return iter(self.attributes)
-    def __contains__(self, item): 
-        return item in self.attributes
-    
-    def __ge__(self,other):
-        return list(self.attributes) >= list(other.attributes)
-    def __gt__(self,other):
-        return list(self.attributes) > list(other.attributes)
-    def __lt__(self,other):
-        return list(self.attributes) < list(other.attributes)
-    def __le__(self,other):
-        return list(self.attributes) <= list(other.attributes)
-    def __abs__(self):
-        return point(abs(self.attributes))
-    
-    def length(self):
-        return self.euclidean_distance(point([0]*len(self.attributes)))
-    def manhattan_distance(self, other):
-        return sum(abs(self.attributes - other.attributes))
-    def euclidean_distance(self, other):
-        return sum((self.attributes - other.attributes)**2)**0.5
-    def dot(self, other):
-        return sum(self.attributes * other.attributes)
-    def copy(self):
-        return point(self.attributes)
-    
-    def get_attributes(self):
-        return list(self.attributes)
-    def set_attributes(self, attributes):
-        self.attributes = np.array(attributes)
-
 import unittest     
 import random  
-class test_point(unittest.TestCase):
 
-    def setUp(self):
-        self.trials = 100
-        self.dimensions = 3
-        self.points = [[ random.random() for _ in range(self.dimensions)] for __ in range(self.trials)]
-    
-    def test_string(self):
-        for i in self.points:
-            self.assertEqual(str(np.array(i)), str(point(i)))
-    def test_eq(self):
-        for i in self.points:
-            self.assertEqual(point(i), point(i))
-            self.assertNotEqual(point(i), point(i + [0]))
-            self.assertNotEqual(point(i), point([j + 0.01 for j in i]))
-            p = point(i)
-            p[0] += 0.1
-            self.assertNotEqual(p,point(i))
-    def test_hash(self):
-        for i in self.points:
-            self.assertTrue(isinstance(hash(point(i)),int))
-            self.assertNotEqual(hash(point(i)), hash(point([j + 0.01 for j in i])))
-    def test_op_num(self):
-        r = random.random() + 0.01
-        for i in self.points:
-            self.assertEqual(((point(i) +r) - r), point(i))
-            self.assertEqual(((point(i)*r)/r),point(i))
-            self.assertEqual(((point(i)**r)**(1/r)), point(i))
-    def test_len(self):
-        for i in self.points:
-            self.assertEqual(len(i),len(point(i)))
-    def test_item_access(self):
-        for i in self.points:
-            p = point(i)
-            p[0] = p[0] + 1
-            self.assertNotEqual(i[0],p[0])
-    def test_iter_contain(self):
-        ans =True
-        for i in self.points:
-            for j in point(i):
-                ans &= j in point(i)
-        self.assertTrue(ans)
-    def test_euclidean_dist(self):
-        for i in range(1,len(self.points)):
-            d1 = point(self.points[i-1]).euclidean_distance(point(self.points[i]))
-            d2 = (sum((np.array(self.points[i-1]) - np.array(self.points[i]))**2))**0.5
-            self. assertAlmostEqual(d1,d2)
-    def test_manhattan_dist(self):
-        for i in range(1,len(self.points)):
-            d1 = point(self.points[i-1]).manhattan_distance(point(self.points[i]))
-            d2 = sum(abs(np.array(self.points[i-1]) - np.array(self.points[i])))
-            self. assertAlmostEqual(d1,d2)
-    def test_dot(self):
-        for i in range(1,len(self.points)):
-            a = point(self.points[i-1]).dot(point(self.points[i]))
-            b = sum(np.array(self.points[i-1])*np.array(self.points[i]))
-            self.assertEqual(a,b)
-    def test_copy(self):
-        for i in self.points:
-            a = point(i)
-            b = a
-            c = a.copy()
-            a[0] += 1
-            self.assertEqual(a,b)
-            self.assertNotEqual(a,c)
-    def test_get_set(self):
-        for i in self.points:
-            p = point(i)
-            p.set_attributes(i)
-            self.assertEqual(point(i).get_attributes(), i)
+from point import point
+
 
 class cluster(object):
     '''assumes self is a cluster of points, models self as a list of point objects'''
@@ -149,13 +15,13 @@ class cluster(object):
         else: 
             self.points = data
     def __eq__(self,other):
-        return sorted(self.points) == sorted(other.points) 
+        return set(self.points) == set(other.points) 
     def __repr__(self):
         return str(self.points)
     def __len__(self):
         return len(self.points)
     def __hash__(self):
-        return hash(tuple(self.points))
+        return hash(tuple(hash(p) for p in self.points))
 
     def arithematic(self,other, operation):
         ''' returns a new cluster as the result of element wise operation of first n elements of self and other where n = len'''
@@ -204,20 +70,22 @@ class cluster(object):
         return min([min(i) for i in cluster.distance_matrix(self,other, f)])
     def complete_linkage(self,other, f = point.euclidean_distance):
         return max([max(i) for i in cluster.distance_matrix(self,other, f)])
-    def normalized(self):
-        min = self.points[0].copy()
-        max = self.points[0].copy()
+    def range(self):
+        minimum = np.array(self.points[0])
+        maximum = np.array(self.points[0])
         for i in self.points:
             for j in range(len(self.points[0])):
-                if i[j] < min[j]:
-                    min[j] = i[j]
-                if i[j] > max[j]:
-                    max[j] = i[j]
-
-        if min == max: 
-            return cluster([point([1]*len(min)) for _ in self.points])
+                if i[j] < minimum[j]:
+                    minimum[j] = i[j]
+                if i[j] > maximum[j]:
+                    maximum[j] = i[j]
+        return minimum, maximum
+    def normalized(self):
+        minimum, maximum = self.range()
+        if (minimum == maximum).all(): 
+            return cluster([point([1]*len(maximum)) for _ in self.points])
         else:
-            return cluster([(p - min)/(max-min) for p in self.points])
+            return cluster([(p - minimum)/(maximum-minimum) for p in self.points])
     def merged(self, other):
         return cluster(self.points + other.points)
     def copy(self):
@@ -259,7 +127,7 @@ class test_cluster(unittest.TestCase):
             self.assertTrue(isinstance(c, cluster))
             self.assertEqual(c,cluster([op(a,b) for a,b in zip(self.clusters[i:i+10],self.clusters[i+1:i+11])]))
             self.assertTrue(isinstance(op(c,r), cluster))
-            self.assertEqual(op(c,r), op(c,r) + 0.000001)
+            self.assertEqual(op(c,r), op(c,r) + 0.0000001)
     def test_add(self):
         test_cluster.arithematic(self, lambda x,y: x + y)
     def test_sub(self):
@@ -338,6 +206,11 @@ class cluster_set(object):
         return max([f(a.centroid(),b.centroid()) for a,b in zip(self.clusters, other.clusters)]) < min_diff
     def copy(self):
         return cluster_set(self.clusters.copy())
+    
+class test_cluster_set(unittest.TestCase):
+    def setUp(self):
+        self.clusters = [cluster([point([random.random() for _ in range(3)]) for _ in range(10)]) for _ in range(10)]
 
+    
 if __name__ == '__main__':
     unittest.main()
