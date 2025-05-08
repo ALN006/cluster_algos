@@ -1,5 +1,5 @@
 #OOP approach
-from point_and_cluster import *
+from cluster import *
 
 def grid_cluster(k, points: cluster):
 

@@ -4,7 +4,7 @@ import unittest
 import random  
 
 from point import point
-
+from matplotlib import pyplot as plt
 
 class cluster(object):
     '''assumes self is a cluster of points, models self as a list of point objects'''
@@ -90,6 +90,10 @@ class cluster(object):
         return cluster(self.points + other.points)
     def copy(self):
         return cluster([p.copy() for p in self.points])
+    
+    def plot(self: "cluster", c: str = "blue", attributes: list = [0,1]) -> None:
+        for point in self.points:
+            point.plot(color = c, components = attributes)
     
     def get_points(self):
         return self.points
@@ -207,6 +211,22 @@ class cluster_set(object):
     def copy(self):
         return cluster_set(self.clusters.copy())
     
+    def plot(self: "cluster_set", file_name: str, labels: list[str], attributes: list = [0,1]) -> "plt.figure":
+        plt.figure()
+        plt.title(labels[0])
+        plt.xlabel(labels[1])
+        plt.ylabel(labels[2])
+        L = ["red", "green", "blue"]
+        count = 0
+        for cluster in self.clusters:
+            cluster.plot(L[count%3], attributes)
+            count += 1
+        plt.savefig(file_name)
+        plt.close()
+    
+    def append(self, cluster):
+        self.clusters.append(cluster)
+        
 class test_cluster_set(unittest.TestCase):
     def setUp(self):
         self.clusters = [cluster([point([random.random() for _ in range(3)]) for _ in range(10)]) for _ in range(10)]

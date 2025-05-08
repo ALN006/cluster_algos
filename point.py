@@ -1,10 +1,26 @@
 import numpy as np
+from matplotlib import pyplot as plt
 import unittest     
 import random  
 
 
+class matrix(object):
+    '''assumes self is a matrix, models self as a list of lists'''
 
-class point (object):
+    def __init__(self: "matrix", transformation: list[np.array]) -> None:
+        self.matrix = transformation
+
+    def __repr__(self: "matrix") -> str:
+        representation = ""
+        for row in self.matrix:
+            representation += str(row) + '\n'
+        return representation
+
+        
+    def __mul__(self: "matrix", other: "point") -> "point":
+        return point([sum(other*row) for row in self.matrix])
+
+class point(object):
     """assumes self is a n-dimensional position vector for a point, models self as a array of attributes"""
  
     #basic properties
@@ -93,6 +109,15 @@ class point (object):
     def copy(self: "point") -> "point":
         return point(self.attributes)
     
+    def plot_vector(self: "point", c: str = "blue",components: list = [0,1]) -> None:
+        x_comp = self.attributes[components[0]]
+        y_comp = self.attributes[components[1]]
+        plt.quiver(0, 0, x_comp, y_comp, angles='xy', scale_units='xy', scale=1, color=c)
+    def plot(self: "point", color: str = "blue",components: list = [0,1]) -> None:
+        x_comp = self.attributes[components[0]]
+        y_comp = self.attributes[components[1]]
+        plt.scatter(x_comp, y_comp, c= color, alpha= 0.5)
+
 
     #getter and setter methods
     def get_attributes(self: "point") -> list:
@@ -110,21 +135,26 @@ class test_point(unittest.TestCase):
         self.dimensions = 3
         self.points = [[ random.random() for _ in range(self.dimensions)] for __ in range(self.trials)]
     
-    def test_string(self):
+    #basic properties tested
+    def test_string(self): #__init__, __repr__
         for i in self.points:
             self.assertEqual(str(np.array(i)), str(point(i)))
-    def test_eq(self):
+    def test_eq(self): #__eq__, __setitem__, __abs__, __len__
         for i in self.points:
             self.assertEqual(point(i), point(i))
+            self.assertEqual(len(point(i)), len(point(i)))
             self.assertNotEqual(point(i), point(i + [0]))
             self.assertNotEqual(point(i), point([j + 0.01 for j in i]))
             p = point(i)
             p[0] += 0.1
             self.assertNotEqual(p,point(i))
-    def test_hash(self):
+            p[0] *= -1
+            self.assertNotEqual(p,abs(p))
+    def test_hash(self): #__hash__
         for i in self.points:
             self.assertTrue(isinstance(hash(point(i)),int))
             self.assertNotEqual(hash(point(i)), hash(point([j + 0.01 for j in i])))
+
     def test_op_num(self):
         r = random.random() + 0.01
         for i in self.points:
@@ -173,3 +203,15 @@ class test_point(unittest.TestCase):
             p = point(i)
             p.set_attributes(i)
             self.assertEqual(point(i).get_attributes(), i)
+
+# a = point([0,3])
+# b = point([6,7])
+# plt.figure()
+# plt.xlim([0,10])
+# plt.ylim([0,10])
+# plt.grid()
+# a.plot_2d("red")
+# b.plot_2d()
+# plt.show()
+if __name__ == '__main__':
+    unittest.main()

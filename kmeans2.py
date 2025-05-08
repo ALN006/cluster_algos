@@ -1,9 +1,9 @@
 # OOP approach
-from point_and_cluster import *
+from cluster import *
 import pandas as pd
 import random
 
-def KMeans(k,data,cutoff = cluster_set.is_close, max_iterations = 100):
+def KMeans(k: int,data,cutoff = cluster_set.is_close, max_iterations = 100):
     ''' assumes data is a cluster and k is a possitive integer
         returns the k clusters that most closely approximate ndimensional spheres 
         uses kmeans method'''
@@ -47,4 +47,9 @@ def KMeans(k,data,cutoff = cluster_set.is_close, max_iterations = 100):
 table = pd.read_csv("final_weather_data.csv")
 data = table[["Dew_Point (°C)", "Humidity (%)", "Pressure (hPa)", "Temperature (°C)", "Visibility (km)"]]
 data = cluster(data).normalized()
-print(KMeans(10,data))
+means , clusters, __ = KMeans(2,data)
+clusters.append(means)
+clusters.plot("Dew4", ["visibility", "Dew_Point (°C)", "Visibility (km)"],[0,4])
+clusters.plot("Dew3", ["temprature", "Dew_Point (°C)", "Temperature (°C)"],[0,3])
+clusters.plot("Dew2", ["Preassure", "Dew_Point (°C)", "Pressure (hPa)"],[0,2])
+clusters.plot("Dew1", ["Humidity", "Dew_Point (°C)", "Humidity (%)"],[0,1])
