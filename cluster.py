@@ -7,6 +7,7 @@ from point import point
 from matplotlib import pyplot as plt
 
 class cluster(object):
+    
     '''assumes self is a cluster of points, models self as a list of point objects'''
 
     def __init__(self,data:list[point]):
