@@ -49,6 +49,7 @@ data = table[["Dew_Point (°C)", "Humidity (%)", "Pressure (hPa)", "Temperature 
 data = cluster(data).normalized()
 means , clusters, __ = KMeans(2,data)
 clusters.append(means)
+
 clusters.plot("Dew4", ["visibility", "Dew_Point (°C)", "Visibility (km)"],[0,4])
 clusters.plot("Dew3", ["temprature", "Dew_Point (°C)", "Temperature (°C)"],[0,3])
 clusters.plot("Dew2", ["Preassure", "Dew_Point (°C)", "Pressure (hPa)"],[0,2])
