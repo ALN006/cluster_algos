@@ -204,14 +204,5 @@ class test_point(unittest.TestCase):
             p.set_attributes(i)
             self.assertEqual(point(i).get_attributes(), i)
 
-# a = point([0,3])
-# b = point([6,7])
-# plt.figure()
-# plt.xlim([0,10])
-# plt.ylim([0,10])
-# plt.grid()
-# a.plot_2d("red")
-# b.plot_2d()
-# plt.show()
 if __name__ == '__main__':
     unittest.main()
